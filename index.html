@@ -1,0 +1,744 @@
+   yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu top sendeyken  shift+a çok hızlı koşu sağ tık pas sol tık şut
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CFO  crv futbol oyunu</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+            touch-action: none;
+        }
+        #game-container {
+            position: relative;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
+        }
+        
+        #top-panel {
+            position: absolute;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 10px 25px;
+            border-radius: 8px;
+            border: 2px solid #3498db;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+        #score-text {
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+        }
+        #input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #input-row label {
+            font-size: 16px;
+            font-weight: bold;
+        }
+        #team-name-input {
+            border: 1px solid #aaa;
+            padding: 6px 12px;
+            font-size: 16px;
+            border-radius: 4px;
+            width: 250px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        #scoreboard {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            gap: 40px;
+            font-size: 24px;
+            font-weight: bold;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 25px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            z-index: 10;
+            pointer-events: none;
+        }
+        #score-ours { color: #3498db; }
+        #score-rivals { color: #e74c3c; }
+        #timer { color: #f1c40f; margin-left: 10px; }
+
+        #goal-splash {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 80px;
+            font-weight: 900;
+            color: #f1c40f;
+            text-shadow: 0 0 20px #fff, 0 0 30px #e67e22;
+            background: rgba(0,0,0,0.8);
+            padding: 30px 60px;
+            border-radius: 20px;
+            display: none;
+            z-index: 100;
+        }
+
+        #game-menu {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            border: 6px solid #444;
+        }
+        .menu-btn {
+            background: #3498db;
+            color: #fff;
+            border: none;
+            padding: 15px 45px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 80px;
+            transition: 0.2s;
+        }
+        .menu-btn:hover { background: #2980b9; transform: scale(1.05); }
+
+        canvas {
+            border: 6px solid #444;
+            background-color: #1a1a1a;
+        }
+
+        /* --- MOBİL BUTONLAR VE JOYSTICK STİLLERİ --- */
+        #mobile-joystick-container {
+            position: absolute;
+            bottom: 30px;
+            left: 40px;
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 150;
+        }
+        #mobile-joystick-knob {
+            width: 55px;
+            height: 55px;
+            background: #ffffff;
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+        .joystick-label {
+            position: absolute;
+            top: -25px;
+            font-weight: bold;
+            font-size: 14px;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 1px;
+        }
+        #mobile-buttons-container {
+            position: absolute;
+            bottom: 30px;
+            right: 40px;
+            display: none;
+            grid-template-columns: repeat(2, 75px);
+            gap: 12px;
+            z-index: 150;
+        }
+        .mobile-action-btn {
+            width: 75px;
+            height: 55px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        .mobile-action-btn:active {
+            background: rgba(52, 152, 219, 0.8);
+            border-color: #fff;
+        }
+        .btn-subtext {
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="top-panel">
+            <div id="score-text">SEN: <span id="panel-ours">0</span> - RAKİP: <span id="panel-rivals">0</span></div>
+            <div id="input-row">
+                <label>TAKIM ADI GİRİNİZ:</label>
+                <input type="text" id="team-name-input" value=" TAKIM ADI GİRİNİZ " maxlength="15">
+            </div>
+        </div>
+
+        <div id="game-menu">
+            <button class="menu-btn" onclick="startOfflineGame()">MAÇA BAŞLA</button>
+        </div>
+
+        <div id="scoreboard">
+            <div><span id="label-our-team">TAKIM ADI GİRİNİZ</span>: <span id="score-ours">0</span></div>
+            <div>|</div>
+            <div>TAKIM 2: <span id="score-rivals">0</span></div>
+            <div id="timer">3:00</div>
+        </div>
+        
+        <div id="goal-splash">!!!GOOOOOL!!!</div>
+
+        <div id="mobile-joystick-container">
+            <div class="joystick-label">HAREKET</div>
+            <div id="mobile-joystick-knob"></div>
+        </div>
+
+        <div id="mobile-buttons-container">
+            <div class="mobile-action-btn" id="btn-tackle">ÇALIM</div>
+            <div class="mobile-action-btn" id="btn-shift">SHIFT<div class="btn-subtext">(SPRINT)</div></div>
+            <div class="mobile-action-btn" id="btn-pass">PAS</div>
+            <div class="mobile-action-btn" id="btn-shoot">ŞUT</div>
+        </div>
+
+        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreOursEl = document.getElementById("score-ours");
+        const scoreRivalsEl = document.getElementById("score-rivals");
+        const panelOursEl = document.getElementById("panel-ours");
+        const panelRivalsEl = document.getElementById("panel-rivals");
+        const timerEl = document.getElementById("timer");
+        const goalSplashEl = document.getElementById("goal-splash");
+        const gameMenuEl = document.getElementById("game-menu");
+        const scoreboardEl = document.getElementById("scoreboard");
+        const teamNameInputEl = document.getElementById("team-name-input");
+        const labelOurTeamEl = document.getElementById("label-our-team");
+
+        // Mobil Girdileri
+        const joystickContainer = document.getElementById("mobile-joystick-container");
+        const joystickKnob = document.getElementById("mobile-joystick-knob");
+        const mobileButtonsContainer = document.getElementById("mobile-buttons-container");
+
+        let scoreOurs = 0;
+        let scoreRivals = 0;
+        let gameTimeLeft = 180; 
+        let gameInterval;
+        let isGameRunning = false;
+        let isMobile = false;
+
+        const keys = {};
+        const mouse = { x: 0, y: 0 };
+        const mobileJoystickInput = { x: 0, y: 0, isActive: false };
+        
+        const FIELD_PADDING = 20; 
+        const GOAL_WIDTH = 120;
+        const GOAL_DEPTH = 30;
+
+        let ballCarrier = null; 
+
+        // --- Cihaz Kontrolü ---
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+            isMobile = true;
+        }
+
+        window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+        window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+        
+        if (!isMobile) {
+            canvas.addEventListener("mousemove", e => {
+                const rect = canvas.getBoundingClientRect();
+                mouse.x = e.clientX - rect.left;
+                mouse.y = e.clientY - rect.top;
+            });
+            canvas.addEventListener("contextmenu", e => e.preventDefault()); 
+            canvas.addEventListener("mousedown", e => {
+                if (!isGameRunning) return;
+                if (e.button === 0) playerAction("shoot"); 
+                if (e.button === 2) playerAction("pass");  
+            });
+        }
+
+        // --- Mobil Dokunmatik Mantığı ---
+        if (isMobile) {
+            joystickContainer.addEventListener("touchstart", e => {
+                mobileJoystickInput.isActive = true;
+                handleJoystickMove(e);
+            });
+            window.addEventListener("touchmove", e => {
+                if (mobileJoystickInput.isActive) handleJoystickMove(e);
+            }, { passive: false });
+            window.addEventListener("touchend", () => {
+                mobileJoystickInput.isActive = false;
+                mobileJoystickInput.x = 0;
+                mobileJoystickInput.y = 0;
+                joystickKnob.style.left = "42px";
+                joystickKnob.style.top = "42px";
+            });
+
+            function handleJoystickMove(e) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const rect = joystickContainer.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                let dx = touch.clientX - centerX;
+                let dy = touch.clientY - centerY;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                const maxDist = rect.width / 2;
+
+                if (dist > maxDist) {
+                    dx = (dx / dist) * maxDist;
+                    dy = (dy / dist) * maxDist;
+                    dist = maxDist;
+                }
+
+                joystickKnob.style.left = (42 + dx) + "px";
+                joystickKnob.style.top = (42 + dy) + "px";
+
+                mobileJoystickInput.x = dx / maxDist;
+                mobileJoystickInput.y = dy / maxDist;
+            }
+
+            // Mobil Buton Atamaları
+            document.getElementById("btn-shoot").addEventListener("touchstart", e => { e.preventDefault(); playerAction("shoot"); });
+            document.getElementById("btn-pass").addEventListener("touchstart", e => { e.preventDefault(); playerAction("pass"); });
+            document.getElementById("btn-tackle").addEventListener("touchstart", e => { e.preventDefault(); keys["a"] = true; });
+            document.getElementById("btn-tackle").addEventListener("touchend", e => { keys["a"] = false; });
+            document.getElementById("btn-shift").addEventListener("touchstart", e => { e.preventDefault(); keys["shift"] = true; });
+            document.getElementById("btn-shift").addEventListener("touchend", e => { keys["shift"] = false; });
+        }
+
+        class Ball {
+            constructor() {
+                this.reset();
+                this.radius = 10;
+                this.friction = 0.98; 
+                this.color = "#ffffff";
+            }
+            reset() {
+                this.x = canvas.width / 2;
+                this.y = canvas.height / 2;
+                this.vx = 0;
+                this.vy = 0;
+                ballCarrier = null;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x + 3, this.y + 3, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(0,0,0,0.3)";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#000";
+                ctx.stroke();
+            }
+            update() {
+                if (!isGameRunning) return;
+
+                if (ballCarrier) {
+                    let angle = Math.atan2(ballCarrier.vy, ballCarrier.vx);
+                    if (ballCarrier.vx === 0 && ballCarrier.vy === 0) {
+                        angle = ballCarrier.team === 1 ? 0 : Math.PI;
+                    }
+                    this.x = ballCarrier.x + Math.cos(angle) * (ballCarrier.radius + this.radius - 2);
+                    this.y = ballCarrier.y + Math.sin(angle) * (ballCarrier.radius + this.radius - 2);
+                    this.vx = 0;
+                    this.vy = 0;
+                } else {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vx *= this.friction;
+                    this.vy *= this.friction;
+                }
+
+                if (this.y - this.radius <= FIELD_PADDING) { 
+                    this.y = FIELD_PADDING + this.radius;
+                    this.vy = -this.vy * 0.75;
+                } else if (this.y + this.radius >= canvas.height - FIELD_PADDING) { 
+                    this.y = canvas.height - FIELD_PADDING - this.radius;
+                    this.vy = -this.vy * 0.75;
+                }
+
+                const goalTop = canvas.height / 2 - GOAL_WIDTH / 2;
+                const goalBottom = canvas.height / 2 + GOAL_WIDTH / 2;
+
+                if (this.x - this.radius <= FIELD_PADDING) {
+                    if (this.y > goalTop && this.y < goalBottom) {
+                        goalScored("rivals");
+                    } else {
+                        this.x = FIELD_PADDING + this.radius;
+                        this.vx = -this.vx * 0.75;
+                    }
+                } else if (this.x + this.radius >= canvas.width - FIELD_PADDING) {
+                    if (this.y > goalTop && this.y < goalBottom) {
+                        goalScored("ours");
+                    } else {
+                        this.x = canvas.width - FIELD_PADDING - this.radius;
+                        this.vx = -this.vx * 0.75;
+                    }
+                }
+            }
+        }
+
+        class Player {
+            constructor(x, y, team, role, name, isBot) {
+                this.startX = x; this.startY = y;
+                this.x = x; this.y = y;
+                this.vx = 0; this.vy = 0;
+                this.team = team; this.role = role; this.name = name; this.isBot = isBot;
+                this.radius = 16;
+                this.baseSpeed = 1.9; 
+                this.runSpeed = 3.2;  
+                this.kickPower = { shoot: 13, pass: 8.5 }; 
+                this.color = team === 1 ? "#3498db" : "#555";
+                if (role === "GK") this.color = team === 1 ? "#f1c40f" : "#a569bd"; 
+            }
+
+            reset() {
+                this.x = this.startX;
+                this.y = this.startY;
+                this.vx = 0;
+                this.vy = 0;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x + 4, this.y + 4, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(0,0,0,0.3)";
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#fff";
+                ctx.stroke();
+
+                if (!this.isBot) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y + this.radius + 10, 8, 0, Math.PI * 2);
+                    ctx.fillStyle = "#e74c3c";
+                    ctx.fill();
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "#e74c3c";
+                }
+
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 12px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(this.name, this.x, this.y - this.radius - 12);
+                ctx.font = "10px sans-serif";
+                ctx.fillText(`(${this.role})`, this.x, this.y + 4);
+                ctx.shadowBlur = 0; 
+            }
+
+            update() {
+                if (!isGameRunning) return;
+
+                if (!this.isBot) {
+                    let currentSpeed = keys["shift"] ? this.runSpeed : this.baseSpeed;
+                    
+                    if (isMobile) {
+                        if (mobileJoystickInput.isActive) {
+                            this.vx = mobileJoystickInput.x * currentSpeed;
+                            this.vy = mobileJoystickInput.y * currentSpeed;
+                            this.x += this.vx;
+                            this.y += this.vy;
+                        } else {
+                            this.vx = 0; this.vy = 0;
+                        }
+                    } else {
+                        let dx = mouse.x - this.x;
+                        let dy = mouse.y - this.y;
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist > 10) { 
+                            this.vx = (dx / dist) * currentSpeed;
+                            this.vy = (dy / dist) * currentSpeed;
+                            this.x += this.vx;
+                            this.y += this.vy;
+                        } else {
+                            this.vx = 0; this.vy = 0;
+                        }
+                    }
+
+                    if (keys["a"]) {
+                        if (ballCarrier && ballCarrier.team === 2) {
+                            let distToCarrier = Math.sqrt((ballCarrier.x - this.x)**2 + (ballCarrier.y - this.y)**2);
+                            if (distToCarrier < this.radius + ballCarrier.radius + 20) {
+                                ballCarrier = this; 
+                            }
+                        } else if (ballCarrier === this) {
+                            this.x += this.vx * 1.5;
+                            this.y += this.vy * 1.5;
+                        }
+                    }
+                } else {
+                    this.aiBehavior();
+                }
+
+                this.x = Math.max(FIELD_PADDING + this.radius, Math.min(canvas.width - FIELD_PADDING - this.radius, this.x));
+                this.y = Math.max(FIELD_PADDING + this.radius, Math.min(canvas.height - FIELD_PADDING - this.radius, this.y));
+
+                if (!ballCarrier) {
+                    let distToBall = Math.sqrt((ball.x - this.x)**2 + (ball.y - this.y)**2);
+                    if (distToBall < this.radius + ball.radius + 2) {
+                        ballCarrier = this; 
+                    }
+                }
+            }
+
+            aiBehavior() {
+                let targetX = this.startX;
+                let targetY = this.startY;
+                let ballInOurHalf = (this.team === 1 && ball.x < canvas.width / 2) || (this.team === 2 && ball.x > canvas.width / 2);
+
+                if (this.role === "GK") {
+                    targetY = ball.y;
+                    let gkLimitTop = canvas.height / 2 - GOAL_WIDTH / 0.8;
+                    let gkLimitBottom = canvas.height / 2 + GOAL_WIDTH / 0.8;
+                    targetY = Math.max(gkLimitTop, Math.min(gkLimitBottom, targetY));
+                    targetX = this.startX + (ball.x - this.startX) * 0.15;
+                } 
+                else if (this.role === "DEF") {
+                    if (ballInOurHalf) {
+                        targetX = ball.x - (this.team === 1 ? 70 : -70);
+                        targetY = ball.y;
+                    }
+                } 
+                else if (this.role === "FW") {
+                    targetX = ball.x;
+                    targetY = ball.y;
+                }
+
+                let dx = targetX - this.x;
+                let dy = targetY - this.y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 15) {
+                    this.vx = (dx / dist) * (this.baseSpeed * 0.9);
+                    this.vy = (dy / dist) * (this.baseSpeed * 0.9);
+                    this.x += this.vx;
+                    this.y += this.vy;
+                } else {
+                    this.vx = 0; this.vy = 0;
+                }
+
+                // Botların bizden top alabilmesi özelliği korundu
+                if (ballCarrier && ballCarrier.team === 1) {
+                    let distToUser = Math.sqrt((ballCarrier.x - this.x)**2 + (ballCarrier.y - this.y)**2);
+                    if (distToUser < this.radius + ballCarrier.radius + 5 && Math.random() < 0.04) {
+                        ballCarrier = this;
+                    }
+                }
+
+                if (ballCarrier === this) {
+                    let targetGoalX = this.team === 1 ? canvas.width - FIELD_PADDING : FIELD_PADDING;
+                    let targetGoalY = canvas.height / 2;
+                    let bDx = targetGoalX - ball.x;
+                    let bDy = targetGoalY - ball.y;
+                    let bDist = Math.sqrt(bDx*bDx + bDy*bDy);
+                    
+                    ballCarrier = null; 
+                    ball.vx = (bDx / bDist) * 9.5;
+                    ball.vy = (bDy / bDist) * 9.5 + (Math.random() - 0.5) * 2;
+                }
+            }
+        }
+
+        const ball = new Ball();
+        const players = [
+            new Player(80, canvas.height / 2, 1, "GK", "Uğurcan", true),
+            new Player(280, canvas.height / 2, 1, "DEF", "H. Maguire", true),
+            new Player(450, canvas.height / 2, 1, "FW", "J. Alvarez (SEN)", false), 
+
+            new Player(canvas.width - 80, canvas.height / 2, 2, "GK", "Donnarumma", true),
+            new Player(canvas.width - 280, canvas.height / 2, 2, "DEF", "Gabriel M.", true),
+            new Player(canvas.width - 450, canvas.height / 2, 2, "FW", "Semih Kılıçsoy", true)
+        ];
+
+        function playerAction(type) {
+            let userFW = players[2]; 
+            if (ballCarrier !== userFW) return; 
+            
+            let dx, dy;
+            if (isMobile && (mobileJoystickInput.x !== 0 || mobileJoystickInput.y !== 0)) {
+                dx = mobileJoystickInput.x;
+                dy = mobileJoystickInput.y;
+            } else if (!isMobile) {
+                dx = mouse.x - ball.x;
+                dy = mouse.y - ball.y;
+            } else {
+                dx = canvas.width - ball.x;
+                dy = canvas.height / 2 - ball.y;
+            }
+
+            let mDist = Math.sqrt(dx * dx + dy * dy);
+            let power = userFW.kickPower[type];
+            
+            ballCarrier = null; 
+            ball.vx = (dx / mDist) * power;
+            ball.vy = (dy / mDist) * power;
+        }
+
+        function goalScored(who) {
+            isGameRunning = false; 
+            if (who === "ours") scoreOurs++; else scoreRivals++;
+            
+            scoreOursEl.innerText = scoreOurs;
+            scoreRivalsEl.innerText = scoreRivals;
+            panelOursEl.innerText = scoreOurs;
+            panelRivalsEl.innerText = scoreRivals;
+            
+            goalSplashEl.style.display = "block";
+            
+            setTimeout(() => {
+                goalSplashEl.style.display = "none";
+                resetPositions();
+                isGameRunning = true;
+            }, 2000);
+        }
+
+        function resetPositions() {
+            ball.reset();
+            players.forEach(p => p.reset());
+        }
+
+        function updateTimer() {
+            if (!isGameRunning) return;
+            
+            gameTimeLeft--;
+            if (gameTimeLeft <= 0) {
+                clearInterval(gameInterval);
+                isGameRunning = false;
+                timerEl.innerText = "0:00";
+                alert(`Maç Bitti! Skor: ${labelOurTeamEl.innerText}: ${scoreOurs} - RAKİP: ${scoreRivals}`);
+                
+                gameMenuEl.style.display = "flex";
+                scoreboardEl.style.display = "none";
+                if(isMobile) {
+                    joystickContainer.style.display = "none";
+                    mobileButtonsContainer.style.display = "none";
+                }
+                return;
+            }
+            let mins = Math.floor(gameTimeLeft / 60);
+            let secs = gameTimeLeft % 60;
+            timerEl.innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        function startOfflineGame() {
+            let chosenName = teamNameInputEl.value.trim();
+            if(chosenName === "") chosenName = " TAKIM ADI GİRİNİZ";
+            labelOurTeamEl.innerText = chosenName.toUpperCase();
+
+            gameMenuEl.style.display = "none";
+            scoreboardEl.style.display = "flex";
+            
+            if (isMobile) {
+                joystickContainer.style.display = "flex";
+                mobileButtonsContainer.style.display = "grid";
+                joystickKnob.style.left = "42px";
+                joystickKnob.style.top = "42px";
+            }
+            
+            scoreOurs = 0; scoreRivals = 0;
+            scoreOursEl.innerText = "0"; scoreRivalsEl.innerText = "0";
+            panelOursEl.innerText = "0"; panelRivalsEl.innerText = "0";
+            gameTimeLeft = 180; 
+            resetPositions();
+            
+            isGameRunning = true;
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(updateTimer, 1000);
+        }
+
+        function drawField() {
+            ctx.fillStyle = "#1e723a"; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "#1b6835";
+            for(let i=0; i<10; i+=2) {
+                ctx.fillRect((canvas.width / 10) * i, 0, canvas.width / 10, canvas.height);
+            }
+
+            ctx.fillStyle = "#333";
+            ctx.fillRect(0, 0, canvas.width, FIELD_PADDING); 
+            ctx.fillRect(0, canvas.height - FIELD_PADDING, canvas.width, FIELD_PADDING); 
+            ctx.fillRect(0, 0, FIELD_PADDING, canvas.height); 
+            ctx.fillRect(canvas.width - FIELD_PADDING, 0, FIELD_PADDING, canvas.height); 
+
+            ctx.strokeStyle = "rgba(255,255,255,0.6)";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, FIELD_PADDING);
+            ctx.lineTo(canvas.width / 2, canvas.height - FIELD_PADDING);
+            ctx.moveTo(canvas.width / 2 + 70, canvas.height / 2);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 70, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.fillStyle = "#444";
+            ctx.fillRect(FIELD_PADDING - GOAL_DEPTH, canvas.height / 2 - GOAL_WIDTH / 2, GOAL_DEPTH, GOAL_WIDTH); 
+            ctx.fillRect(canvas.width - FIELD_PADDING, canvas.height / 2 - GOAL_WIDTH / 2, GOAL_DEPTH, GOAL_WIDTH); 
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawField();
+
+            ball.update();
+            ball.draw();
+
+            players.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
