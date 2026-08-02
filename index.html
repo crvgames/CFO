@@ -1,16 +1,18 @@
-   yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu top sendeyken  shift+a çok hızlı koşu sağ tık pas sol tık şut
+yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu top sendeyken  shift+a çok hızlı koşu sağ tık pas sol tık şut
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CFO  crv futbol oyunu</title>
+    <title>CFO crv futbol oyunu</title>
     <style>
         body {
             margin: 0;
-            background-color: #1a1a1a;
-            color: white;
+            padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -139,13 +141,14 @@
             left: 40px;
             width: 140px;
             height: 140px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 3px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: none;
             justify-content: center;
             align-items: center;
             z-index: 150;
+            touch-action: none;
         }
         #mobile-joystick-knob {
             width: 55px;
@@ -160,7 +163,7 @@
             top: -25px;
             font-weight: bold;
             font-size: 14px;
-            color: rgba(255,255,255,0.7);
+            color: rgba(255,255,255,0.8);
             letter-spacing: 1px;
         }
         #mobile-buttons-container {
@@ -168,32 +171,35 @@
             bottom: 30px;
             right: 40px;
             display: none;
-            grid-template-columns: repeat(2, 75px);
+            grid-template-columns: repeat(2, 85px);
             gap: 12px;
             z-index: 150;
         }
         .mobile-action-btn {
-            width: 75px;
-            height: 55px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.4);
-            border-radius: 8px;
+            width: 85px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.65);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 13px;
             color: white;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
+            user-select: none;
+            touch-action: manipulation;
         }
-        .mobile-action-btn:active {
-            background: rgba(52, 152, 219, 0.8);
+        .mobile-action-btn.active, .mobile-action-btn:active {
+            background: rgba(52, 152, 219, 0.9);
             border-color: #fff;
+            transform: scale(0.95);
         }
         .btn-subtext {
             font-size: 9px;
-            opacity: 0.7;
+            opacity: 0.8;
             margin-top: 2px;
         }
     </style>
@@ -205,7 +211,7 @@
             <div id="score-text">SEN: <span id="panel-ours">0</span> - RAKİP: <span id="panel-rivals">0</span></div>
             <div id="input-row">
                 <label>TAKIM ADI GİRİNİZ:</label>
-                <input type="text" id="team-name-input" value=" TAKIM ADI GİRİNİZ " maxlength="15">
+                <input type="text" id="team-name-input" value="TAKIMIM" maxlength="15">
             </div>
         </div>
 
@@ -214,7 +220,7 @@
         </div>
 
         <div id="scoreboard">
-            <div><span id="label-our-team">TAKIM ADI GİRİNİZ</span>: <span id="score-ours">0</span></div>
+            <div><span id="label-our-team">TAKIMIM</span>: <span id="score-ours">0</span></div>
             <div>|</div>
             <div>TAKIM 2: <span id="score-rivals">0</span></div>
             <div id="timer">3:00</div>
@@ -228,10 +234,10 @@
         </div>
 
         <div id="mobile-buttons-container">
-            <div class="mobile-action-btn" id="btn-tackle">ÇALIM</div>
+            <div class="mobile-action-btn" id="btn-tackle">ÇALIM<div class="btn-subtext">(A / TOP AL)</div></div>
             <div class="mobile-action-btn" id="btn-shift">SHIFT<div class="btn-subtext">(SPRINT)</div></div>
-            <div class="mobile-action-btn" id="btn-pass">PAS</div>
-            <div class="mobile-action-btn" id="btn-shoot">ŞUT</div>
+            <div class="mobile-action-btn" id="btn-pass">PAS<div class="btn-subtext">(SAĞ TİK)</div></div>
+            <div class="mobile-action-btn" id="btn-shoot">ŞUT<div class="btn-subtext">(SOL TİK)</div></div>
         </div>
 
         <canvas id="gameCanvas" width="1000" height="600"></canvas>
@@ -251,7 +257,7 @@
         const teamNameInputEl = document.getElementById("team-name-input");
         const labelOurTeamEl = document.getElementById("label-our-team");
 
-        // Mobil Girdileri
+        // Mobil Girdi Elemanları
         const joystickContainer = document.getElementById("mobile-joystick-container");
         const joystickKnob = document.getElementById("mobile-joystick-knob");
         const mobileButtonsContainer = document.getElementById("mobile-buttons-container");
@@ -273,7 +279,7 @@
 
         let ballCarrier = null; 
 
-        // --- Cihaz Kontrolü ---
+        // --- Cihaz Algılama ---
         if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
             isMobile = true;
         }
@@ -300,33 +306,48 @@
             joystickContainer.addEventListener("touchstart", e => {
                 mobileJoystickInput.isActive = true;
                 handleJoystickMove(e);
-            });
+            }, { passive: false });
+
             window.addEventListener("touchmove", e => {
                 if (mobileJoystickInput.isActive) handleJoystickMove(e);
             }, { passive: false });
-            window.addEventListener("touchend", () => {
-                mobileJoystickInput.isActive = false;
-                mobileJoystickInput.x = 0;
-                mobileJoystickInput.y = 0;
-                joystickKnob.style.left = "42px";
-                joystickKnob.style.top = "42px";
+
+            window.addEventListener("touchend", e => {
+                if (e.touches.length === 0 || !isTouchInsideJoystick(e)) {
+                    mobileJoystickInput.isActive = false;
+                    mobileJoystickInput.x = 0;
+                    mobileJoystickInput.y = 0;
+                    joystickKnob.style.left = "42px";
+                    joystickKnob.style.top = "42px";
+                }
             });
+
+            function isTouchInsideJoystick(e) {
+                const rect = joystickContainer.getBoundingClientRect();
+                for (let i = 0; i < e.touches.length; i++) {
+                    let t = e.touches[i];
+                    if (t.clientX >= rect.left && t.clientX <= rect.right &&
+                        t.clientY >= rect.top && t.clientY <= rect.bottom) {
+                        return true;
+                    }
+                }
+                return false;
+            }
 
             function handleJoystickMove(e) {
                 e.preventDefault();
-                const touch = e.touches[0];
+                let touch = e.touches[0];
                 const rect = joystickContainer.getBoundingClientRect();
                 const centerX = rect.left + rect.width / 2;
                 const centerY = rect.top + rect.height / 2;
                 let dx = touch.clientX - centerX;
                 let dy = touch.clientY - centerY;
-                let dist = Math.sqrt(dx*dx + dy*dy);
+                let dist = Math.sqrt(dx * dx + dy * dy);
                 const maxDist = rect.width / 2;
 
                 if (dist > maxDist) {
                     dx = (dx / dist) * maxDist;
                     dy = (dy / dist) * maxDist;
-                    dist = maxDist;
                 }
 
                 joystickKnob.style.left = (42 + dx) + "px";
@@ -336,13 +357,31 @@
                 mobileJoystickInput.y = dy / maxDist;
             }
 
-            // Mobil Buton Atamaları
-            document.getElementById("btn-shoot").addEventListener("touchstart", e => { e.preventDefault(); playerAction("shoot"); });
-            document.getElementById("btn-pass").addEventListener("touchstart", e => { e.preventDefault(); playerAction("pass"); });
-            document.getElementById("btn-tackle").addEventListener("touchstart", e => { e.preventDefault(); keys["a"] = true; });
-            document.getElementById("btn-tackle").addEventListener("touchend", e => { keys["a"] = false; });
-            document.getElementById("btn-shift").addEventListener("touchstart", e => { e.preventDefault(); keys["shift"] = true; });
-            document.getElementById("btn-shift").addEventListener("touchend", e => { keys["shift"] = false; });
+            // Mobil Buton Atamaları (Dokunma Olayları)
+            const bindBtn = (id, keyName, isToggleAction) => {
+                const btn = document.getElementById(id);
+                btn.addEventListener("touchstart", e => {
+                    e.preventDefault();
+                    btn.classList.add("active");
+                    if (isToggleAction) {
+                        playerAction(keyName);
+                    } else {
+                        keys[keyName] = true;
+                    }
+                });
+                btn.addEventListener("touchend", e => {
+                    e.preventDefault();
+                    btn.classList.remove("active");
+                    if (!isToggleAction) {
+                        keys[keyName] = false;
+                    }
+                });
+            };
+
+            bindBtn("btn-shoot", "shoot", true);
+            bindBtn("btn-pass", "pass", true);
+            bindBtn("btn-tackle", "a", false);
+            bindBtn("btn-shift", "shift", false);
         }
 
         class Ball {
@@ -430,6 +469,7 @@
                 this.radius = 16;
                 this.baseSpeed = 1.9; 
                 this.runSpeed = 3.2;  
+                this.superRunSpeed = 4.3; // Shift + A için çok hızlı koşu
                 this.kickPower = { shoot: 13, pass: 8.5 }; 
                 this.color = team === 1 ? "#3498db" : "#555";
                 if (role === "GK") this.color = team === 1 ? "#f1c40f" : "#a569bd"; 
@@ -478,8 +518,14 @@
                 if (!isGameRunning) return;
 
                 if (!this.isBot) {
-                    let currentSpeed = keys["shift"] ? this.runSpeed : this.baseSpeed;
-                    
+                    // Hız Seviyeleri: Yürüme -> Shift (Koşu) -> Shift + A (Çok Hızlı Koşu)
+                    let currentSpeed = this.baseSpeed;
+                    if (keys["shift"] && keys["a"] && ballCarrier === this) {
+                        currentSpeed = this.superRunSpeed; // Shift + A Çok Hızlı Koşu
+                    } else if (keys["shift"] || (keys["a"] && ballCarrier === this)) {
+                        currentSpeed = this.runSpeed; // Normal Koşu
+                    }
+
                     if (isMobile) {
                         if (mobileJoystickInput.isActive) {
                             this.vx = mobileJoystickInput.x * currentSpeed;
@@ -504,15 +550,13 @@
                         }
                     }
 
+                    // A Tuşu Mekaniği (Topu Alma / Çalım)
                     if (keys["a"]) {
                         if (ballCarrier && ballCarrier.team === 2) {
                             let distToCarrier = Math.sqrt((ballCarrier.x - this.x)**2 + (ballCarrier.y - this.y)**2);
-                            if (distToCarrier < this.radius + ballCarrier.radius + 20) {
-                                ballCarrier = this; 
+                            if (distToCarrier < this.radius + ballCarrier.radius + 25) {
+                                ballCarrier = this; // Top alma (Çalım)
                             }
-                        } else if (ballCarrier === this) {
-                            this.x += this.vx * 1.5;
-                            this.y += this.vy * 1.5;
                         }
                     }
                 } else {
@@ -565,7 +609,6 @@
                     this.vx = 0; this.vy = 0;
                 }
 
-                // Botların bizden top alabilmesi özelliği korundu
                 if (ballCarrier && ballCarrier.team === 1) {
                     let distToUser = Math.sqrt((ballCarrier.x - this.x)**2 + (ballCarrier.y - this.y)**2);
                     if (distToUser < this.radius + ballCarrier.radius + 5 && Math.random() < 0.04) {
@@ -670,7 +713,7 @@
 
         function startOfflineGame() {
             let chosenName = teamNameInputEl.value.trim();
-            if(chosenName === "") chosenName = " TAKIM ADI GİRİNİZ";
+            if(chosenName === "") chosenName = "TAKIMIM";
             labelOurTeamEl.innerText = chosenName.toUpperCase();
 
             gameMenuEl.style.display = "none";
