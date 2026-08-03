@@ -1,76 +1,40 @@
 yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu top sendeyken  shift+a çok hızlı koşu sağ tık pas sol tık şut
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="UTF-8">
     <title>CFO crv futbol oyunu</title>
     <style>
-        body {
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
             margin: 0;
             padding: 0;
+            width: 100vw;
+            height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #121212;
             color: white;
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             overflow: hidden;
             user-select: none;
+            -webkit-user-select: none;
             touch-action: none;
         }
+
         #game-container {
             position: relative;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.7);
-        }
-        
-        #top-panel {
-            position: absolute;
-            top: 15px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            padding: 10px 25px;
-            border-radius: 8px;
-            border: 2px solid #3498db;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 100;
-        }
-        #score-text {
-            font-size: 14px;
-            font-weight: bold;
-            color: #555;
-        }
-        #input-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        #input-row label {
-            font-size: 16px;
-            font-weight: bold;
-        }
-        #team-name-input {
-            border: 1px solid #aaa;
-            padding: 6px 12px;
-            font-size: 16px;
-            border-radius: 4px;
-            width: 250px;
-            font-weight: bold;
-            text-transform: uppercase;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
         }
 
         #scoreboard {
             position: absolute;
-            top: 100px;
+            top: 15px;
             left: 50%;
             transform: translateX(-50%);
             display: none;
@@ -81,7 +45,7 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             padding: 8px 25px;
             border-radius: 8px;
             border: 1px solid #555;
-            z-index: 10;
+            z-index: 100;
             pointer-events: none;
         }
         #score-ours { color: #3498db; }
@@ -101,20 +65,56 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             padding: 30px 60px;
             border-radius: 20px;
             display: none;
-            z-index: 100;
+            z-index: 200;
         }
 
+        /* --- OYUN MENÜSÜ VE TAKIM ADI KUTUSU --- */
         #game-menu {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.85);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 50;
-            border: 6px solid #444;
+            z-index: 150;
+            gap: 15px;
         }
+        
+        #input-box {
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 3px solid #3498db;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 160;
+        }
+
+        #input-box label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
+        }
+
+        #team-name-input {
+            border: 2px solid #3498db;
+            padding: 10px 15px;
+            font-size: 18px;
+            border-radius: 6px;
+            width: 250px;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: center;
+            outline: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
         .menu-btn {
             background: #3498db;
             color: #fff;
@@ -124,13 +124,15 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            margin-top: 80px;
             transition: 0.2s;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
         }
         .menu-btn:hover { background: #2980b9; transform: scale(1.05); }
 
         canvas {
-            border: 6px solid #444;
+            display: block;
+            width: 100vw;
+            height: 100vh;
             background-color: #1a1a1a;
         }
 
@@ -147,7 +149,7 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             display: none;
             justify-content: center;
             align-items: center;
-            z-index: 150;
+            z-index: 110;
             touch-action: none;
         }
         #mobile-joystick-knob {
@@ -173,7 +175,7 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             display: none;
             grid-template-columns: repeat(2, 85px);
             gap: 12px;
-            z-index: 150;
+            z-index: 110;
         }
         .mobile-action-btn {
             width: 85px;
@@ -207,15 +209,12 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
 <body>
 
     <div id="game-container">
-        <div id="top-panel">
-            <div id="score-text">SEN: <span id="panel-ours">0</span> - RAKİP: <span id="panel-rivals">0</span></div>
-            <div id="input-row">
-                <label>TAKIM ADI GİRİNİZ:</label>
+        <!-- MENÜ VE İSİM GİRİŞ ALANI -->
+        <div id="game-menu">
+            <div id="input-box">
+                <label for="team-name-input">TAKIM ADI GİRİNİZ</label>
                 <input type="text" id="team-name-input" value="TAKIMIM" maxlength="15">
             </div>
-        </div>
-
-        <div id="game-menu">
             <button class="menu-btn" onclick="startOfflineGame()">MAÇA BAŞLA</button>
         </div>
 
@@ -240,7 +239,7 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             <div class="mobile-action-btn" id="btn-shoot">ŞUT<div class="btn-subtext">(SOL TİK)</div></div>
         </div>
 
-        <canvas id="gameCanvas" width="1000" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
     </div>
 
     <script>
@@ -248,8 +247,6 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
         const ctx = canvas.getContext("2d");
         const scoreOursEl = document.getElementById("score-ours");
         const scoreRivalsEl = document.getElementById("score-rivals");
-        const panelOursEl = document.getElementById("panel-ours");
-        const panelRivalsEl = document.getElementById("panel-rivals");
         const timerEl = document.getElementById("timer");
         const goalSplashEl = document.getElementById("goal-splash");
         const gameMenuEl = document.getElementById("game-menu");
@@ -279,10 +276,19 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
 
         let ballCarrier = null; 
 
+        // --- DİNAMİK TAM EKRAN BOYUTLANDIRMA ---
+        function fitCanvasToWindow() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
         // --- Cihaz Algılama ---
         if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
             isMobile = true;
         }
+
+        window.addEventListener("resize", fitCanvasToWindow);
+        fitCanvasToWindow();
 
         window.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
         window.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
@@ -357,7 +363,7 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
                 mobileJoystickInput.y = dy / maxDist;
             }
 
-            // Mobil Buton Atamaları (Dokunma Olayları)
+            // Mobil Buton Atamaları
             const bindBtn = (id, keyName, isToggleAction) => {
                 const btn = document.getElementById(id);
                 btn.addEventListener("touchstart", e => {
@@ -461,23 +467,25 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
         }
 
         class Player {
-            constructor(x, y, team, role, name, isBot) {
-                this.startX = x; this.startY = y;
-                this.x = x; this.y = y;
-                this.vx = 0; this.vy = 0;
+            constructor(relXRatio, relYRatio, team, role, name, isBot) {
+                this.relXRatio = relXRatio;
+                this.relYRatio = relYRatio;
                 this.team = team; this.role = role; this.name = name; this.isBot = isBot;
                 this.radius = 16;
                 this.baseSpeed = 1.9; 
                 this.runSpeed = 3.2;  
-                this.superRunSpeed = 4.3; // Shift + A için çok hızlı koşu
+                this.superRunSpeed = 4.3;
                 this.kickPower = { shoot: 13, pass: 8.5 }; 
                 this.color = team === 1 ? "#3498db" : "#555";
                 if (role === "GK") this.color = team === 1 ? "#f1c40f" : "#a569bd"; 
+                this.reset();
             }
 
             reset() {
-                this.x = this.startX;
-                this.y = this.startY;
+                this.x = canvas.width * this.relXRatio;
+                this.y = canvas.height * this.relYRatio;
+                this.startX = this.x;
+                this.startY = this.y;
                 this.vx = 0;
                 this.vy = 0;
             }
@@ -518,12 +526,11 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
                 if (!isGameRunning) return;
 
                 if (!this.isBot) {
-                    // Hız Seviyeleri: Yürüme -> Shift (Koşu) -> Shift + A (Çok Hızlı Koşu)
                     let currentSpeed = this.baseSpeed;
                     if (keys["shift"] && keys["a"] && ballCarrier === this) {
-                        currentSpeed = this.superRunSpeed; // Shift + A Çok Hızlı Koşu
+                        currentSpeed = this.superRunSpeed;
                     } else if (keys["shift"] || (keys["a"] && ballCarrier === this)) {
-                        currentSpeed = this.runSpeed; // Normal Koşu
+                        currentSpeed = this.runSpeed;
                     }
 
                     if (isMobile) {
@@ -550,12 +557,11 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
                         }
                     }
 
-                    // A Tuşu Mekaniği (Topu Alma / Çalım)
                     if (keys["a"]) {
                         if (ballCarrier && ballCarrier.team === 2) {
                             let distToCarrier = Math.sqrt((ballCarrier.x - this.x)**2 + (ballCarrier.y - this.y)**2);
                             if (distToCarrier < this.radius + ballCarrier.radius + 25) {
-                                ballCarrier = this; // Top alma (Çalım)
+                                ballCarrier = this;
                             }
                         }
                     }
@@ -575,8 +581,8 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             }
 
             aiBehavior() {
-                let targetX = this.startX;
-                let targetY = this.startY;
+                let targetX = canvas.width * this.relXRatio;
+                let targetY = canvas.height * this.relYRatio;
                 let ballInOurHalf = (this.team === 1 && ball.x < canvas.width / 2) || (this.team === 2 && ball.x > canvas.width / 2);
 
                 if (this.role === "GK") {
@@ -584,7 +590,7 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
                     let gkLimitTop = canvas.height / 2 - GOAL_WIDTH / 0.8;
                     let gkLimitBottom = canvas.height / 2 + GOAL_WIDTH / 0.8;
                     targetY = Math.max(gkLimitTop, Math.min(gkLimitBottom, targetY));
-                    targetX = this.startX + (ball.x - this.startX) * 0.15;
+                    targetX = (canvas.width * this.relXRatio) + (ball.x - (canvas.width * this.relXRatio)) * 0.15;
                 } 
                 else if (this.role === "DEF") {
                     if (ballInOurHalf) {
@@ -632,13 +638,13 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
 
         const ball = new Ball();
         const players = [
-            new Player(80, canvas.height / 2, 1, "GK", "Uğurcan", true),
-            new Player(280, canvas.height / 2, 1, "DEF", "H. Maguire", true),
-            new Player(450, canvas.height / 2, 1, "FW", "J. Alvarez (SEN)", false), 
+            new Player(0.08, 0.5, 1, "GK", "Uğurcan", true),
+            new Player(0.28, 0.5, 1, "DEF", "H. Maguire", true),
+            new Player(0.45, 0.5, 1, "FW", "J. Alvarez (SEN)", false), 
 
-            new Player(canvas.width - 80, canvas.height / 2, 2, "GK", "Donnarumma", true),
-            new Player(canvas.width - 280, canvas.height / 2, 2, "DEF", "Gabriel M.", true),
-            new Player(canvas.width - 450, canvas.height / 2, 2, "FW", "Semih Kılıçsoy", true)
+            new Player(0.92, 0.5, 2, "GK", "Donnarumma", true),
+            new Player(0.72, 0.5, 2, "DEF", "Gabriel M.", true),
+            new Player(0.55, 0.5, 2, "FW", "Semih Kılıçsoy", true)
         ];
 
         function playerAction(type) {
@@ -671,8 +677,6 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             
             scoreOursEl.innerText = scoreOurs;
             scoreRivalsEl.innerText = scoreRivals;
-            panelOursEl.innerText = scoreOurs;
-            panelRivalsEl.innerText = scoreRivals;
             
             goalSplashEl.style.display = "block";
             
@@ -728,7 +732,6 @@ yürüme imlece doğru shift koşu çalım(topu alma) a top sendeyken a koşu to
             
             scoreOurs = 0; scoreRivals = 0;
             scoreOursEl.innerText = "0"; scoreRivalsEl.innerText = "0";
-            panelOursEl.innerText = "0"; panelRivalsEl.innerText = "0";
             gameTimeLeft = 180; 
             resetPositions();
             
